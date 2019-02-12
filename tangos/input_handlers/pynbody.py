@@ -542,4 +542,4 @@ class ChangaInputHandler(PynbodyInputHandler):
                 pass
         return out
 
-from . import caterpillar, eagle
+from . import caterpillar, eagle, hestia
