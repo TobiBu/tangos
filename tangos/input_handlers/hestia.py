@@ -10,7 +10,7 @@ from . import halo_stat_files
 import os.path
 
 class HestiaInputHandler(PynbodyInputHandler):
-    patterns = ["snapdir_???"]
+    patterns = ["snapdir_???","snapshot_???"]
 
     @classmethod
     def _snap_id_from_snapdir_path(cls, path):
