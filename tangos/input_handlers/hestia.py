@@ -52,4 +52,16 @@ class HestiaInputHandler(PynbodyInputHandler):
         #except (IOError, RuntimeError):
         #    return False
 
+    def _construct_halo_cat(self, ts_extension, object_typetag):
+        if object_typetag!= 'halo':
+            raise ValueError("Unknown object type %r" % object_typetag)
+        f = self.load_timestep(ts_extension)
+        h = _loaded_halocats.get(id(f), lambda: None)()
+        if h is None:
+            h = pynbody.halo.AHFCatalogue(f, ahf_basename=self._AHF_path_from_snapdir_path(filepath))
+            if isinstance(h, pynbody.halo.SubfindCatalogue):
+                h = f.halos(subs=True)
+            _loaded_halocats[id(f)] = weakref.ref(h)
+            f._db_current_halocat = h # keep alive for lifetime of simulation
+        return h  # pynbody.halo.AmigaGrpCatalogue(f)
 
