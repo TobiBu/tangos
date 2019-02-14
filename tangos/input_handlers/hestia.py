@@ -23,7 +23,7 @@ class HestiaInputHandler(PynbodyInputHandler):
     @classmethod
     def _pynbody_path_from_snapdir_path(cls, path):
         snap_id = cls._snap_id_from_snapdir_path(path)
-        if snap_id:
+        if snap_id is not None:
             return os.path.join(path, "snapshot_%.3d" % snap_id)
         else:
             raise IOError("Cannot infer correct path to pass to pynbody")
@@ -31,10 +31,12 @@ class HestiaInputHandler(PynbodyInputHandler):
     @classmethod
     def _AHF_path_from_snapdir_path(cls, path):
         snap_id = cls._snap_id_from_snapdir_path(path)
-        if snap_id:
-            ahf_path = os.path.spli(os.path.spit(path)[0])[0]
-
-            return os.path.join(ahf_path,"AHF_output")
+        if snap_id is not None:
+            import glob
+            ahf_path = os.path.join(os.path.split(os.path.split(path)[0])[0],"AHF_output")
+            tmp_path = ahf_path + '/HESTIA_100Mpc_*.%.3d.z*_halos' % snap_id
+            cat = glob.glob(tmp_path)[0]
+            return cat[:-5]
         else:
             raise IOError("Cannot infer path of halos")
 
@@ -42,13 +44,12 @@ class HestiaInputHandler(PynbodyInputHandler):
         return str(os.path.join(config.base, self.basename, self._pynbody_path_from_snapdir_path(ts_extension)))
 
     def _is_able_to_load(self, filepath):
-        try:
-            import pynbody
-            f = pynbody.load(self._pynbody_path_from_snapdir_path(filepath))
-            h = pynbody.halo.AHFCatalogue(f, pathname=self._AHF_path_from_snapdir_path(filepath),
-                                               format_revision='hestia')
-            return True
-        except (IOError, RuntimeError):
-            return False
+        #try:
+        import pynbody
+        f = pynbody.load(self._pynbody_path_from_snapdir_path(filepath))
+        h = pynbody.halo.AHFCatalogue(f, ahf_basename=self._AHF_path_from_snapdir_path(filepath))
+        return True
+        #except (IOError, RuntimeError):
+        #    return False
 
 
