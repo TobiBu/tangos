@@ -58,7 +58,7 @@ class HestiaInputHandler(PynbodyInputHandler):
     def _construct_halo_cat(self, ts_extension, object_typetag):
         if object_typetag!= 'halo':
             raise ValueError("Unknown object type %r" % object_typetag)
-        f = self.load_timestep(ts_extension)
+        f = self.load_timestep(self._pynbody_path_from_snapdir_path(ts_extension))
         h = _loaded_halocats.get(id(f), lambda: None)()
         if h is None:
             tmp_path = os.path.join(config.base, self.basename, ts_extension)
