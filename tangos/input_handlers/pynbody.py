@@ -221,7 +221,8 @@ class PynbodyInputHandler(finding.PatternBasedFileDiscovery, HandlerBase):
             except:
                 logger.warn("Unable to read %ss using pynbody; assuming step has none", object_typetag)
                 raise StopIteration
-
+            print(h)
+            print(len(h[1]))
             logger.warn(" => enumerating %ss directly using pynbody", object_typetag)
 
             istart = 1
@@ -236,6 +237,7 @@ class PynbodyInputHandler(finding.PatternBasedFileDiscovery, HandlerBase):
             for i in range(istart, len(h)+istart):
                 try:
                     hi = h[i]
+                    print(hi)
                     if len(hi.dm) > min_halo_particles:
                         yield i, len(hi.dm), len(hi.star), len(hi.gas)
                 except (ValueError, KeyError) as e:
