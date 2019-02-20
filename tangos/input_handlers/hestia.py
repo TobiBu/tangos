@@ -67,3 +67,24 @@ class HestiaInputHandler(PynbodyInputHandler):
             f._db_current_halocat = h # keep alive for lifetime of simulation
         return h  # pynbody.halo.AmigaGrpCatalogue(f)
 
+
+class HestiaAHFStatFile(halo_stat_files.AHFStatFile):
+
+    @classmethod
+    def filename(cls, timestep_filename):
+        import glob
+        print(HestiaInputHandler._AHF_path_from_snapdir_path(timestep_filename))
+        file_list = glob.glob(HestiaInputHandler._AHF_path_from_snapdir_path(timestep_filename))
+
+        # permit the AHF halos to be in a subfolder called "halos", for yt purposes
+        # (where the yt tipsy reader can't cope with the AHF files being in the same folder)
+        parts = timestep_filename.split("/")
+        parts_with_halo = parts[:-1]+["halos"]+parts[-1:]
+        filename_with_halo = "/".join(parts_with_halo)
+        file_list+=glob.glob(filename_with_halo+'.z*.???.AHF_halos')
+
+        if len(file_list)==0:
+            return "CannotFindAHFHaloFilename"
+        else:
+            return file_list[0]
+
