@@ -105,12 +105,13 @@ class AHFTree(object):
             return int(match.group(1))
         else:
             return None
-            
+
     def _AHF_path_from_snapdir_path(cls, path):
         snap_id = cls._snap_id_from_snapdir_path(path)
         if snap_id is not None:
             import glob
             ahf_path = os.path.join(os.path.split(os.path.split(path)[0])[0],"AHF_output")
+            print(ahf_path)
             tmp_path = ahf_path + '/HESTIA_*%.3d.z*AHF_mtree' % snap_id
             cat = glob.glob(tmp_path)[0]
         else:
