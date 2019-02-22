@@ -85,7 +85,7 @@ class HandlerBase(object):
             raise IOError("No stat file known for object type %s"%object_typetag)
         #ts = DummyTimeStep()
         #ts.redshift = self.get_timestep_properties(ts_extension)['redshift']
-        from . import caterpillar
+        from . import caterpillar, hestia
         statfile = halo_stat_files.HaloStatFile(self._extension_to_filename(ts_extension))
         return statfile
 

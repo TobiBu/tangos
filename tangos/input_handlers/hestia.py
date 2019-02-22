@@ -1,5 +1,5 @@
 """Specialised input handler for the hestia project
-http://www.caterpillarproject.org"""
+"""
 
 from __future__ import absolute_import
 
@@ -48,17 +48,17 @@ class HestiaInputHandler(PynbodyInputHandler):
         return str(os.path.join(config.base, self.basename, self._pynbody_path_from_snapdir_path(ts_extension)))
 
     def _is_able_to_load(self, filepath):
-        #try:
-        f = pynbody.load(self._pynbody_path_from_snapdir_path(filepath))
-        h = pynbody.halo.AHFCatalogue(f, ahf_basename=self._AHF_path_from_snapdir_path(filepath))
-        return True
-        #except (IOError, RuntimeError):
-        #    return False
+        try:
+            f = pynbody.load(self._pynbody_path_from_snapdir_path(filepath))
+            h = pynbody.halo.AHFCatalogue(f, ahf_basename=self._AHF_path_from_snapdir_path(filepath))
+            return True
+        except (IOError, RuntimeError):
+            return False
 
     def _construct_halo_cat(self, ts_extension, object_typetag):
         if object_typetag!= 'halo':
             raise ValueError("Unknown object type %r" % object_typetag)
-        f = self.load_timestep(self._pynbody_path_from_snapdir_path(ts_extension))
+        f = self.load_timestep(ts_extension)
         h = _loaded_halocats.get(id(f), lambda: None)()
         if h is None:
             tmp_path = os.path.join(config.base, self.basename, ts_extension)
@@ -67,14 +67,18 @@ class HestiaInputHandler(PynbodyInputHandler):
             f._db_current_halocat = h # keep alive for lifetime of simulation
         return h  # pynbody.halo.AmigaGrpCatalogue(f)
 
+    def match_objects(self, ts1, ts2, halo_min, halo_max,
+                      dm_only=True, threshold=0.005, object_typetag='halo',
+                      output_handler_for_ts2=None):
+        return super(HestiaInputHandler, self).match_objects(ts1, ts2, halo_min, halo_max, dm_only, threshold, object_typetag, output_handler_for_ts2)
+
 
 class HestiaAHFStatFile(halo_stat_files.AHFStatFile):
 
     @classmethod
     def filename(cls, timestep_filename):
         import glob
-        print(HestiaInputHandler._AHF_path_from_snapdir_path(timestep_filename))
-        file_list = glob.glob(HestiaInputHandler._AHF_path_from_snapdir_path(timestep_filename))
+        file_list = glob.glob(HestiaInputHandler._AHF_path_from_snapdir_path(os.path.split(timestep_filename)[0])+'halos')
 
         # permit the AHF halos to be in a subfolder called "halos", for yt purposes
         # (where the yt tipsy reader can't cope with the AHF files being in the same folder)

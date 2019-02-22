@@ -214,15 +214,13 @@ class PynbodyInputHandler(finding.PatternBasedFileDiscovery, HandlerBase):
             for X in self._enumerate_objects_from_statfile(ts_extension, object_typetag):
                 yield X
         else:
-            logger.warn("No halo statistics file found for timestep %r",ts_extension)
+            logger.warn("Tried processing %ss but no halo statistics file found for timestep %r",object_typetag, ts_extension)
 
             try:
                 h = self._construct_halo_cat(ts_extension, object_typetag)
             except:
                 logger.warn("Unable to read %ss using pynbody; assuming step has none", object_typetag)
                 raise StopIteration
-            print(h)
-            print(len(h[1]))
             logger.warn(" => enumerating %ss directly using pynbody", object_typetag)
 
             istart = 1
@@ -544,4 +542,4 @@ class ChangaInputHandler(PynbodyInputHandler):
                 pass
         return out
 
-from . import caterpillar, eagle, hestia, hestia_subfind
+from . import caterpillar, eagle, hestia
