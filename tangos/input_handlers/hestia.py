@@ -99,6 +99,13 @@ class AHFTree(object):
         self._load_raw_links()
         self._load_Mvir(ts.prev)
 
+    def _snap_id_from_snapdir_path(cls, path):
+        match = re.match(".*snapdir_([0-9]{3})/?", path)
+        if match:
+            return int(match.group(1))
+        else:
+            return None
+            
     def _AHF_path_from_snapdir_path(cls, path):
         snap_id = cls._snap_id_from_snapdir_path(path)
         if snap_id is not None:
