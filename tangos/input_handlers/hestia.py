@@ -94,10 +94,10 @@ class HestiaAHFStatFile(halo_stat_files.AHFStatFile):
 
 
 class AHFTree(object):
-    def __init__(self, ts):
-        self._path = self._AHF_path_from_snapdir_path(ts.extension)
+    def __init__(self, path, ts):
+        self._path = self._AHF_path_from_snapdir_path(os.path.join(path,ts.extension))
+        self._load_Mvir(ts.previous)
         self._load_raw_links()
-        self._load_Mvir(ts.prev)
 
     def _snap_id_from_snapdir_path(cls, path):
         match = re.match(".*snapdir_([0-9]{3})/?", path)
@@ -107,13 +107,19 @@ class AHFTree(object):
             return None
 
     def _AHF_path_from_snapdir_path(cls, path):
+        print(path)
         snap_id = cls._snap_id_from_snapdir_path(path)
         if snap_id is not None:
             import glob
             ahf_path = os.path.join(os.path.split(os.path.split(path)[0])[0],"AHF_output")
             print(ahf_path)
             tmp_path = ahf_path + '/HESTIA_*%.3d.z*AHF_mtree' % snap_id
-            cat = glob.glob(tmp_path)[0]
+            # first snapshot has no mtree file check for this
+            cat = glob.glob(tmp_path)
+            if cat != []:
+            	return cat[0]
+            else:
+               raise IOError("First snapshot has no mtree file.")
         else:
             raise IOError("Cannot infer path of merger tree files")
 
@@ -126,32 +132,37 @@ class AHFTree(object):
         results = np.empty((0,), dtype=np.dtype([('id_this', np.int64), ('id_desc', np.int64), ('Mvir', np.float32)]))
 
         f = open(filename)
-        nhalos = np.loadtxt(f, usecols=(1), dtype=np.int64, max_rows=1) #read only first line
+        lines = f.readlines()
+        #mtree_data = np.genfromtxt(f, dtype=int)
+        nhalos = int(lines[0])#np.fromstring(lines[0], dtype=np.int16) #mtree_data[0][0] #np.loadtxt(f, usecols=0, dtype=np.int64, max_rows=1) #read only first line
         skip = 1 #skip the first line
         i=0
         while i < nhalos:
-            _id, ndesc = np.loadtxt(f, usecols=(1, 2), dtype=np.dtype(np.int64,np.int64), skiprows=skip)
-            _id_desc = _id.astype(str)[4:].astype(np.int64) # rip off the timestep which is encoded as the first 3 digits
-            
-            skip += 1 # increment the skip of lines for the line read above
+            i += 1
+            _tmp = np.fromstring(lines[skip], dtype=np.dtype(np.int64,np.int64), sep=' ') #mtree_data[skip][0] #np.loadtxt(f, usecols=(0, 1), dtype=np.dtype(np.int64,np.int64), max_rows=1)
+            _id = _tmp[0] 
+            ndesc = _tmp[1]
+            if ndesc > 0:
+                _id_desc = int(_id)
+                skip += 1 # increment the skip of lines for the line read above
 
-            results['id_desc'] = np.append(results['id_desc'],[_id_desc]*ndesc)
-            
-            _this = np.loadtxt(f, usecols=(1), dtype=np.int64, skiprows=skip, max_rows=ndesc)
-            _this_id = [x.astype(str)[4:].astype(np.int64) for x in _this] # rip off the timestep which is encoded as the first 3 digits
-            
-            skip += ndesc # increment line skip by already read lines
+                #_this = np.loadtxt(f, usecols=0, dtype=str, skiprows=skip, max_rows=ndesc)
+                for n in range(ndesc):
+                    #_this = int(lines[skip+n]) #mtree_data[skip:ndesc+skip][0] 
+                    results['id_desc'] = np.append(results['id_desc'],_id_desc)
+                    _this_id = int(lines[skip+n]) #[int(x[4:]) for x in _this] # rip off the timestep which is encoded as the first 3 digits
+                    results['id_this'] = np.append(results['id_this'],_this_id)
+                    results['Mvir'] = np.append(results['Mvir'], self._Mvir[self._fid == _this_id])
 
-            results['this_id'] = np.append(results['this_id'],_id_desc)
-            results['Mvir'] = np.append(results['Mvir'], self._Mvir[_this_id])
+            skip += ndesc # increment line skip by already read lines   
         
         self.links = results
 
 
     def _load_Mvir(self, ts):
         Mvir = ts.calculate_all('Mvir')
-        self._Mvir = np.array(Mvir)
-
+        self._fid = np.array([x.finder_id for x in ts.halos.all()])
+        self._Mvir = np.asarray(Mvir)[0]
 
     def get_links_for_snapshot(self):
         """Get the links from snapshot ts to its immediate successor.
@@ -159,7 +170,8 @@ class AHFTree(object):
         Returns a dictionary; keys are the finder IDs at the given snapnum, whereas the values are
         a tuple containing the ID at the subsequent snapshot and the merger ratio (or 1.0 for no merger).
         """
-
+        ids_this_snap = self.links['id_this']
+        ids_next_snap = self.links['id_desc']
         merger_ratios = self._get_merger_ratio_array(self.links['id_desc'])
 
         return dict(zip(ids_this_snap, zip(ids_next_snap, merger_ratios)))

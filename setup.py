@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 install_requires = [
     'setuptools',
-    'numpy >= 1.10.0',
+    'numpy >= 1.16.0',
     'sqlalchemy >= 1.0.10',
     'pyparsing >= 2.1.0',
     'WebOb >= 1.7.0rc2', # Response.has_body
