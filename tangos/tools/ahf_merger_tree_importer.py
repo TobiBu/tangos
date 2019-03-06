@@ -68,8 +68,8 @@ class AHFTreeImporter(GenericTangosTool):
             for ts in simulation.timesteps:
                 ts_prev = ts.previous 
                 # ahf merger tree tool goes back in time 
-                if ts_prev is not None and ts_prev.previous is not None:
+                if ts_prev is not None:
                     #additionally check if this is the first snapshot
-                    tree = hes.AHFTree(os.path.join(config.base,simulation.basename), ts_prev)
+                    tree = hes.AHFTree(os.path.join(config.base,simulation.basename), ts)
                     self.create_links(ts_prev, ts, tree.get_links_for_snapshot())
 
