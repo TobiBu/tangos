@@ -45,7 +45,7 @@ class AHFTreeImporter(GenericTangosTool):
 
     def create_links(self, ts, ts_next, link_dictionary):
         session = db.get_default_session()
-        d_id = get_or_create_dictionary_item(session, "ahf_trees_link")
+        d_id = get_or_create_dictionary_item(session, "ahf_tree_link")
         objs_this = self.create_timestep_halo_dictionary(ts)
         objs_next = self.create_timestep_halo_dictionary(ts_next)
         links = []
