@@ -55,6 +55,7 @@ class AHFTreeImporter(GenericTangosTool):
             if this_obj is not None and next_obj is not None:
                 links.append(HaloLink(this_obj, next_obj, d_id, 1.0))
                 links.append(HaloLink(next_obj, this_obj, d_id, merger_ratio))
+        print(links)
         session.add_all(links)
         session.commit()
         logger.info("%d links created between %s and %s",len(links), ts, ts_next)
@@ -70,6 +71,7 @@ class AHFTreeImporter(GenericTangosTool):
                 # ahf merger tree tool goes back in time 
                 if ts_prev is not None:
                     #additionally check if this is the first snapshot
+                    print("Processing links between timestep %s and %s.", ts_prev, ts)
                     tree = hes.AHFTree(os.path.join(config.base,simulation.basename), ts)
                     self.create_links(ts_prev, ts, tree.get_links_for_snapshot())
 

@@ -113,12 +113,10 @@ class AHFTree(object):
             return None
 
     def _AHF_path_from_snapdir_path(cls, path):
-        print(path)
         snap_id = cls._snap_id_from_snapdir_path(path)
         if snap_id is not None:
             import glob
             ahf_path = os.path.join(os.path.split(os.path.split(path)[0])[0],"AHF_output")
-            print(ahf_path)
             tmp_path = ahf_path + '/HESTIA_*%.3d.z*AHF_mtree' % snap_id
             # first snapshot has no mtree file check for this
             cat = glob.glob(tmp_path)
@@ -154,13 +152,12 @@ class AHFTree(object):
                 #_this = np.loadtxt(f, usecols=0, dtype=str, skiprows=skip, max_rows=ndesc)
                 for n in range(ndesc):
                     #_this = int(lines[skip+n]) #mtree_data[skip:ndesc+skip][0] 
-                    results['id_desc'] = np.append(results['id_desc'],np.asarray([_id],dtype=np.int64))
-                    _this_id = int(lines[skip+n]) #[int(x[4:]) for x in _this] # rip off the timestep which is encoded as the first 3 digits
-                    results['id_this'] = np.append(results['id_this'],np.asarray([_this_id],dtype=np.int64))
-                    results['Mvir'] = np.append(results['Mvir'], self._Mvir[self._fid == _this_id])
-
+                    _this_id = int(lines[skip+n][4:]) #[int(x[4:]) for x in _this] # rip off the timestep which is encoded as the first 3 digits
+                    if _this_id in self._fid: # check if the halo exists in the database, thius is needed if db was created with a minimum particle number per halo which does not agree with AHF definition 
+                        results['id_desc'] = np.append(results['id_desc'],np.asarray([int(str(_id)[4:])],dtype=np.int64))
+                        results['id_this'] = np.append(results['id_this'],np.asarray([_this_id],dtype=np.int64))
+                        results['Mvir'] = np.append(results['Mvir'], np.asarray([self._Mvir[self._fid == _this_id]]))
             skip += ndesc # increment line skip by already read lines   
-        
         self.links = results
 
 
@@ -185,9 +182,9 @@ class AHFTree(object):
     def _get_merger_ratio_array(self, ids_next_snap):
 
         ratio = np.ones(len(ids_next_snap))
-        tmp_ids_next_snap = [int(str(x)[4:]) for x in ids_next_snap]
+        tmp_ids_next_snap = ids_next_snap #[int(str(x)[4:]) for x in ids_next_snap]
         num_occurences_next_snap = np.bincount(tmp_ids_next_snap)
-        mergers_next_snap = np.where(num_occurences_next_snap > 1)[0]
+        mergers_next_snap = np.where(num_occurences_next_snap > 0)[0]
         logger.info("Identified %d mergers between snapshots", len(mergers_next_snap))
         for merger in mergers_next_snap:
             contributor_offsets = np.where(ids_next_snap == merger)[0]
