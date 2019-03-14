@@ -154,7 +154,6 @@ class AHFTree(object):
                         results['id_this'] = np.append(results['id_this'],np.asarray([_this_id],dtype=np.int64))
                         #results['Mvir'] = np.append(results['Mvir'], np.asarray([self._Mvir[self._fid == _this_id]]))
                         results['Merit'] = np.append(results['Merit'], np.asarray([(nprogen-n)/nprogen],dtype=np.float64))
-                if int(str(_id)[4:]) == 1:
             skip += nprogen   # increment line skip by already read lines   
         self.links = results
 
