@@ -45,17 +45,16 @@ class AHFTreeImporter(GenericTangosTool):
 
     def create_links(self, ts, ts_next, link_dictionary):
         session = db.get_default_session()
-        d_id = get_or_create_dictionary_item(session, "ahf_trees_link")
+        d_id = get_or_create_dictionary_item(session, "ahf_trees_link_new")
         objs_this = self.create_timestep_halo_dictionary(ts)
         objs_next = self.create_timestep_halo_dictionary(ts_next)
         links = []
-        for this_id, (next_id, merger_ratio) in link_dictionary.items():
+        for this_id, (next_id, (merger_ratio, merit)) in link_dictionary:
             this_obj = objs_this.get(this_id, None)
             next_obj = objs_next.get(next_id, None)
             if this_obj is not None and next_obj is not None:
-                links.append(HaloLink(this_obj, next_obj, d_id, 1.0))
+                links.append(HaloLink(this_obj, next_obj, d_id, merit))
                 links.append(HaloLink(next_obj, this_obj, d_id, merger_ratio))
-        print(links)
         session.add_all(links)
         session.commit()
         logger.info("%d links created between %s and %s",len(links), ts, ts_next)
@@ -71,7 +70,6 @@ class AHFTreeImporter(GenericTangosTool):
                 # ahf merger tree tool goes back in time 
                 if ts_prev is not None:
                     #additionally check if this is the first snapshot
-                    print("Processing links between timestep %s and %s.", ts_prev, ts)
-                    tree = hes.AHFTree(os.path.join(config.base,simulation.basename), ts)
+                    tree = hes.AHFTree(os.path.join(config.base,simulation.basename), ts_prev)
                     self.create_links(ts_prev, ts, tree.get_links_for_snapshot())
 
