@@ -45,16 +45,16 @@ class AHFTreeImporter(GenericTangosTool):
 
     def create_links(self, ts, ts_next, link_dictionary):
         session = db.get_default_session()
-        d_id = get_or_create_dictionary_item(session, "ahf_trees_link_new")
+        d_id = get_or_create_dictionary_item(session, "ahf_trees_link")
         objs_this = self.create_timestep_halo_dictionary(ts)
         objs_next = self.create_timestep_halo_dictionary(ts_next)
         links = []
-        for this_id, (next_id, (merger_ratio, merit)) in link_dictionary:
+        for this_id, (next_id, merit) in link_dictionary: #(merger_ratio, merit)
             this_obj = objs_this.get(this_id, None)
             next_obj = objs_next.get(next_id, None)
             if this_obj is not None and next_obj is not None:
                 links.append(HaloLink(this_obj, next_obj, d_id, merit))
-                links.append(HaloLink(next_obj, this_obj, d_id, merger_ratio))
+                links.append(HaloLink(next_obj, this_obj, d_id, merit))
         session.add_all(links)
         session.commit()
         logger.info("%d links created between %s and %s",len(links), ts, ts_next)
